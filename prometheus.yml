@@ -1,0 +1,13 @@
+scrape_configs:
+  - job_name: "metrics_service"
+    static_configs:
+      - targets: ["metrics-service:8000"]
+  - job_name: "chat_service"
+    static_configs:
+      - targets: ["chat-service:8000"]
+  - job_name: "session_service"
+    static_configs:
+      - targets: ["session-service:8000"]
+  - job_name: "key_service"
+    static_configs:
+      - targets: ["key-service:8000"]

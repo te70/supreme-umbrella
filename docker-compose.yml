@@ -1,0 +1,44 @@
+version: "3.9"
+services:
+  key-service:
+    build: ./key_service
+    ports:
+      - "8001:8000"
+
+  session-service:
+    build: ./session_service
+    ports:
+      - "8002:8000"
+    depends_on:
+      - key-service
+      - redis
+
+  chat-service:
+    build: ./chat_service
+    ports:
+      - "8003:8000"
+    depends_on:
+      - session-service
+      - redis
+
+  metrics-service:
+    build: ./metrics_service
+    ports:
+      - "8004:8000"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
