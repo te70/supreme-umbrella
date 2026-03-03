@@ -1,35 +1,105 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function SecureEncryptDecrypt() {
+  const [plainText, setPlainText] = useState("");
+  const [encryptedText, setEncryptedText] = useState("");
+  const [cipherText, setCipherText] = useState("");
+  const [decryptedText, setDecryptedText] = useState("");
+
+  // Encrypt message via Encrypt API
+  const handleEncrypt = async () => {
+    if (!plainText.trim()) return;
+
+    try {
+      const res = await fetch("http://encrypt_api:8000/encrypt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: plainText }),
+      });
+      const data = await res.json();
+      const jsonStr = JSON.stringify(data, null, 2);
+      setEncryptedText(jsonStr);
+      setCipherText(jsonStr); // auto-fill decrypt box
+    } catch (err) {
+      console.error("Encryption error:", err);
+    }
+  };
+
+  // Decrypt message via Decrypt API
+  const handleDecrypt = async () => {
+    if (!cipherText.trim()) return;
+
+    try {
+      const res = await fetch("http://decrypt_api:8001/decrypt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: cipherText,
+      });
+      const data = await res.json();
+      setDecryptedText(data.plaintext);
+    } catch (err) {
+      console.error("Decryption error:", err);
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="container py-5" style={{ background: "#e0d4f7", minHeight: "100vh" }}>
+      <h1 className="text-center mb-5 text-primary">Secure Encrypt/Decrypt</h1>
 
-export default App
+      {/* Encryption Section */}
+      <div className="card mb-4 shadow-sm">
+        <div className="card-body">
+          <h4 className="card-title text-primary">Encrypt a Message</h4>
+          <textarea
+            className="form-control mb-3"
+            placeholder="Type message here..."
+            rows={3}
+            value={plainText}
+            onChange={(e) => setPlainText(e.target.value)}
+          />
+          <button className="btn btn-primary" onClick={handleEncrypt}>
+            Encrypt
+          </button>
+
+          {encryptedText && (
+            <div className="card mt-3 bg-light">
+              <div className="card-body">
+                <h6 className="card-subtitle mb-2 text-muted">Encrypted Message</h6>
+                <pre style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
+                  {encryptedText}
+                </pre>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Decryption Section */}
+      <div className="card shadow-sm">
+        <div className="card-body">
+          <h4 className="card-title text-success">Decrypt a Message</h4>
+          <textarea
+            className="form-control mb-3"
+            placeholder="Paste encrypted JSON here..."
+            rows={5}
+            value={cipherText}
+            onChange={(e) => setCipherText(e.target.value)}
+          />
+          <button className="btn btn-success" onClick={handleDecrypt}>
+            Decrypt
+          </button>
+
+          {decryptedText && (
+            <div className="card mt-3 bg-light">
+              <div className="card-body">
+                <h6 className="card-subtitle mb-2 text-muted">Decrypted Message</h6>
+                <p>{decryptedText}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
