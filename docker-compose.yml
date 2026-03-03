@@ -2,30 +2,20 @@ version: "3.9"
 services:
   key-service:
     build: ./key_service
+    container_name: key_service
     ports:
-      - "8001:8000"
+      - "8000:8000"
     volumes:
       - ./keys:/app/keys
     environment:
-      - KEY_PATH=/app/keys/server_rsa.pem
+      - PUBLIC_KEY_PATH=/app/keys/public.pem
 
   session-service:
     build: ./session_service
     ports:
-      - "8002:8000"
+      - "8001:8000"
     depends_on:
       - key-service
-      - redis
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-
-  chat-service:
-    build: ./chat_service
-    ports:
-      - "8003:8000"
-    depends_on:
-      - session-service
       - redis
     environment:
       - REDIS_HOST=redis
@@ -52,12 +42,6 @@ services:
     image: grafana/grafana
     ports:
       - "3000:3000"
-
-  server:
-    build: ./server
-    container_name: chat_server
-    ports:
-      - "3001:3001"
   
   client:
     build: ./client
