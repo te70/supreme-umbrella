@@ -4,6 +4,10 @@ services:
     build: ./key_service
     ports:
       - "8001:8000"
+    volumes:
+      - ./keys:/app/keys
+    environment:
+      - KEY_PATH=/app/keys/server_rsa.pem
 
   session-service:
     build: ./session_service
@@ -12,6 +16,9 @@ services:
     depends_on:
       - key-service
       - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
 
   chat-service:
     build: ./chat_service
@@ -20,6 +27,9 @@ services:
     depends_on:
       - session-service
       - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
 
   metrics-service:
     build: ./metrics_service
@@ -42,3 +52,17 @@ services:
     image: grafana/grafana
     ports:
       - "3000:3000"
+
+  server:
+    build: ./server
+    container_name: chat_server
+    ports:
+      - "3001:3001"
+  
+  client:
+    build: ./client
+    container_name: chat_client
+    ports:
+      - "5173:80"
+    depends_on:
+      - server

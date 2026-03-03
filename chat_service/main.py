@@ -4,12 +4,17 @@ import redis, base64, json
 from Crypto.Cipher import AES
 
 app = FastAPI()
-r = redis.Redis()
+r = redis.Redis(host="redis", port=6379, db=0)
 
 @app.websocket("/ws/{client_id}")
 async def chat(websocket: WebSocket, client_id: str):
     await websocket.accept()
-    session_key = base64.b64decode(r.get(f"session:{client_id}"))
+    session_key_b64 = r.get(f"session:{client_id}")
+    if not session_key_b64:
+        await websocket.close(code=1008, reason="No session key")
+        return
+
+    session_key = base64.b64decode(session_key_b64)
     while True:
         data = await websocket.receive_text()
         msg = json.loads(data)
