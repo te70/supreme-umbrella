@@ -1,10 +1,18 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 export default function SecureEncryptDecrypt() {
+
+  interface CipherPayload {
+  ciphertext: string;
+  enc_aes_key: string;
+  nonce: string;
+  tag: string;
+}
+
   const [plainText, setPlainText] = useState("");
   const [encryptedText, setEncryptedText] = useState("");
-  const [cipherText, setCipherText] = useState("");
+  const [cipherPayload, setCipherPayload] = useState<CipherPayload | null>(null);
   const [decryptedText, setDecryptedText] = useState("");
 
   // Encrypt message via Encrypt API
@@ -12,15 +20,17 @@ export default function SecureEncryptDecrypt() {
     if (!plainText.trim()) return;
 
     try {
-      const res = await fetch("http://encrypt_api:8000/encrypt", {
+      const res = await fetch("http://localhost:8000/encrypt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: plainText }),
       });
       const data = await res.json();
-      const jsonStr = JSON.stringify(data, null, 2);
-      setEncryptedText(jsonStr);
-      setCipherText(jsonStr); // auto-fill decrypt box
+      //show only encrypted text
+      setEncryptedText(data.ciphertext);
+
+      //store the full object in hidden state for decryption
+      setCipherPayload(data); // auto-fill decrypt box
     } catch (err) {
       console.error("Encryption error:", err);
     }
@@ -28,16 +38,17 @@ export default function SecureEncryptDecrypt() {
 
   // Decrypt message via Decrypt API
   const handleDecrypt = async () => {
-    if (!cipherText.trim()) return;
+    if (!cipherPayload) return;
 
     try {
-      const res = await fetch("http://decrypt_api:8001/decrypt", {
+      const res = await fetch("http://localhost:8001/decrypt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: cipherText,
+        body: JSON.stringify(cipherPayload),
       });
       const data = await res.json();
       setDecryptedText(data.plaintext);
+      setEncryptedText(cipherPayload.ciphertext); // keep showing encrypted text
     } catch (err) {
       console.error("Decryption error:", err);
     }
@@ -83,8 +94,8 @@ export default function SecureEncryptDecrypt() {
             className="form-control mb-3"
             placeholder="Paste encrypted JSON here..."
             rows={5}
-            value={cipherText}
-            onChange={(e) => setCipherText(e.target.value)}
+            value={encryptedText}
+            onChange={(e) => setEncryptedText(e.target.value)}
           />
           <button className="btn btn-success" onClick={handleDecrypt}>
             Decrypt
