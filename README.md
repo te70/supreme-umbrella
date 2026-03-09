@@ -141,5 +141,5 @@ docker compose run load-tester
 ### Grafana screenshot
 
 ```markdown
-![Grafana Dashboard](.grafana_metrics.png)
+![Grafana Dashboard](./grafana_metrics.png)
 ```
